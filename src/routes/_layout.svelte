@@ -1,9 +1,9 @@
 <style>
 	main {
 		position: relative;
-		max-width: 56em;
+		max-width: 100vw;
 		background-color: white;
-		padding: 2em;
+		padding:0;
 		margin: 0 auto;
 		box-sizing: border-box;
 	}

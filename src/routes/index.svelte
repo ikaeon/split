@@ -3,6 +3,7 @@
 
 	let canvas;
 	let handle_keydown;
+	let fps = 1;
 	
 	onMount(() => {
 
@@ -82,7 +83,7 @@
 			requestAnimationFrame(loop);
 		
 			// slow game loop to 15 fps instead of 60 (60/15 = 4)
-			if (++count < 15) {
+			if (++count < (61 - fps)) {
 				return;
 			}
 
@@ -168,7 +169,27 @@
 </script>
 
 <style>
-   canvas {
+	main {
+		display:grid;
+		grid-template-columns: 20vw 80vw ;
+		grid-template-areas:"a b";
+		height:100vh;
+		width:100vw;
+	}
+
+	controlarea {
+		grid-area:a;
+		display:flex;
+		flex-direction:column;
+		justify-content: stretch;
+		align-content: center;
+		height:100%;
+		padding-left:10px;
+			
+	}
+
+	canvas {
+		grid-area:b;		
     border: 1px solid black;
   }
 
@@ -176,9 +197,21 @@
 
 <svelte:window on:keydown={handle_keydown}/>
 
+<main>
+<controlarea>
+<p>Snake Speed: {fps} </p>
+
+<label>
+	<input type=range bind:value={fps} min=1 max=60 onkeydown="return false">
+</label>
+
+</controlarea>
+
+
 <canvas
 	bind:this={canvas}
 	width={800}
 	height={800}
 ></canvas>
 
+</main>
