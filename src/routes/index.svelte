@@ -10,7 +10,7 @@
 	let cell_no = 50;
 	let clear = false;
 	let playing = false;
-
+	let bollard_drops = 7;
 
 	const socket = io();
 	
@@ -32,6 +32,8 @@
 
 	socket.on('stop',()=> {
 		playing = false;
+		bollard_drops = 8;
+		lines = !lines;
 
 	});
 	
@@ -51,7 +53,11 @@
 		var rect = canvas.getBoundingClientRect();
 		const x = 1+Math.floor((e.clientX - rect.left) / grid);
     const y = 1+Math.floor((e.clientY - rect.top) / grid);
-		if(!lines && b_allowed(x,y)) socket.emit('place_bollard',x,y);
+		
+		if(!lines && b_allowed(x,y) && bollard_drops >= 0){
+			socket.emit('place_bollard',x,y);
+			--bollard_drops;
+		}
 		
 	}
 
