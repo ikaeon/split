@@ -4,7 +4,7 @@ import compression from 'compression';
 import * as sapper from '@sapper/server';
 import http from 'http';
 import sock from 'socket.io';
-import worker from 'worker_threads';
+//import worker from 'worker_threads';
 
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
@@ -24,14 +24,14 @@ const io = sock(server);
 
 let who = 0;
 
-let h = new worker.Worker('./test.js');
+//let h = new worker.Worker('./test.js');
 
 
 io.on('connection', (socket) => {
 
 	socket.emit('whoami', who == 0);
 	who = (who + 1) % 2;
-//  setInterval(()=>socket.emit('loop'),1);
+  setInterval(()=>socket.emit('loop'),1);
 
 
 });
