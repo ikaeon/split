@@ -4,13 +4,13 @@ import compression from 'compression';
 import * as sapper from '@sapper/server';
 import http from 'http';
 import sock from 'socket.io';
-
+import worker from 'worker_threads';
 
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
 const server = http.createServer();
 
-polka() // You can also use Express
+polka({server}) // You can also use Express
 	.use(
 		compression({ threshold: 0 }),
 		sirv('static', { dev }),
@@ -21,3 +21,19 @@ polka() // You can also use Express
 	});
 
 const io = sock(server);
+
+let who = 0;
+
+let h = new worker.Worker('./test.js');
+
+
+io.on('connection', (socket) => {
+
+	socket.emit('whoami', who == 0);
+	who = (who + 1) % 2;
+//  setInterval(()=>socket.emit('loop'),1);
+
+
+});
+
+
