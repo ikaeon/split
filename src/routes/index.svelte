@@ -4,7 +4,7 @@
 
   let dimi = 100; 
 	let canvas;
-	let fps = 20;
+	let fps = 10;
 	let board_state = Array(66).fill(0).map(x => Array(66).fill(0));
 	let lines = false;
 	let cell_no = 50;
@@ -23,15 +23,23 @@
 	});
 
 
-	socket.on('start',() => {
+	socket.on('start',(x) => {
+		cell_no = x;
 		clear = true;
 		playing = true;
 		board_state = Array(66).fill(0).map(x => Array(66).fill(0));
+	});
+
+	socket.on('stop',()=> {
+		playing = false;
+
 	});
 	
 	$: grid = Math.floor(dimi / cell_no) ;
 	$: dim = grid * cell_no;
 	$: scale = (cell) => grid * (cell - 1);
+	$: socket.emit('change_loop_speed',fps);
+  $: socket.emit('change_dimension',cell_no);
 
 	function b_allowed(x,y) {
 		
@@ -43,7 +51,7 @@
 		var rect = canvas.getBoundingClientRect();
 		const x = 1+Math.floor((e.clientX - rect.left) / grid);
     const y = 1+Math.floor((e.clientY - rect.top) / grid);
-		if(b_allowed(x,y)) socket.emit('place_bollard',x,y);
+		if(!lines && b_allowed(x,y)) socket.emit('place_bollard',x,y);
 		
 	}
 

@@ -23,7 +23,7 @@ const io = sock(server);
 
 const max_dim = 64 + 2;
 let who = 0;
-let loop_hande;
+let loop_handle = 0;
 let board_state = Array(max_dim).fill(0).map(x => Array(max_dim).fill(0));
 let head_x = 1,head_y = 1,h_dx = 1,h_dy = 0;
 let board_dim = 50;
@@ -46,13 +46,17 @@ function main_loop() {
 		head_y > board_dim ||
 		head_x < 1 || 
 		head_y < 1) {
-		clearInterval(loop_hande);
+		clearInterval(loop_handle);
+		io.emit('stop');
+		loop_handle = 0;
 		// Edge of board
 		// game over
 
 	}else if(board_state[nx][ny] == 1) {
 		// game over
-		clearInterval(loop_hande);
+		clearInterval(loop_handle);
+		io.emit('stop');
+		loop_handle = 0;
 	}else if(board_state[nx][ny] == 2) {
 		let dir = Math.random() < 0.5 ? -1 : 1;
 		let tx = h_dx*dir;
@@ -107,26 +111,37 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('change_direction',change_direction);
+	
+	socket.on('change_dimension',(x) => {
+		if(x >= 8 && x <= max_dim - 2) {
+			console.log(x,board_dim);
+			board_dim = x;
+		}
+	});
 
 	socket.on('start',() =>{
-		io.emit('start');
-		head_x = 1;head_y = 1;h_dx = 1;h_dy = 0;
+			console.log(board_dim);
+		io.emit('start',board_dim);
+		loop_handle = 0;
+		head_x = 1;head_y = Math.floor(board_dim/2);h_dx = 1;h_dy = 0;
 		board_state = Array(max_dim).fill(0).map(x => Array(max_dim).fill(0));
 		update_board([[head_x,head_y,1]]);
-		loop_hande = setInterval(main_loop,200);
+		loop_handle = setInterval(main_loop,100);
 	});
 
 	socket.on('stop',()=> {
-		clearInterval(loop_hande);
+		clearInterval(loop_handle);
 	});
 
 	socket.on('change_loop_speed',(s) => {
-		clearInterval(loop_hande);
-    loop_hande = setInterval(socket.emit('loop'),1/s);
+		if (loop_handle != 0) {
+			clearInterval(loop_handle);
+			loop_handle = setInterval(main_loop,1000/s);
+		}
 	});
 
 	socket.on('disconnect', function() {
-		clearInterval(loop_hande);
+		clearInterval(loop_handle);
   });
 
 
