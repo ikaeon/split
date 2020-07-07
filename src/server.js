@@ -47,6 +47,7 @@ function main_loop() {
 		head_x < 1 || 
 		head_y < 1) {
 		clearInterval(loop_handle);
+		update_board([[head_x,head_y,1]]);
 		io.emit('stop');
 		loop_handle = 0;
 		// Edge of board
@@ -100,10 +101,6 @@ io.on('connection', (socket) => {
 	socket.emit('whoami', who == 0);
 	who = (who + 1) % 2;
 
-	socket.on('head',(dx,dy)=>{
-		io.emit('update_head',dx,dy);
-	});
-
 	socket.on('place_bollard',(x,y)=> {
 	  if(x>=0 && x<=board_dim && y >= 0 && y <=board_dim && board_state[x][y] == 0) {
 			update_board([[x,y,2],[x+1,y+1,3],[x-1,y+1,3],[x+1,y-1,3],[x-1,y-1,3]]);
@@ -114,18 +111,16 @@ io.on('connection', (socket) => {
 	
 	socket.on('change_dimension',(x) => {
 		if(x >= 8 && x <= max_dim - 2) {
-			console.log(x,board_dim);
 			board_dim = x;
 		}
 	});
 
 	socket.on('start',() =>{
-			console.log(board_dim);
-		io.emit('start',board_dim);
 		loop_handle = 0;
 		head_x = 1;head_y = Math.floor(board_dim/2);h_dx = 1;h_dy = 0;
+		io.emit('start',board_dim);
 		board_state = Array(max_dim).fill(0).map(x => Array(max_dim).fill(0));
-		update_board([[head_x,head_y,1]]);
+		update_board([[head_x,head_y,1],[0,head_y,1]]);
 		loop_handle = setInterval(main_loop,100);
 	});
 

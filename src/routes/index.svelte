@@ -10,7 +10,38 @@
 	let cell_no = 50;
 	let clear = false;
 	let playing = false;
-	let bollard_drops = 7;
+	let bollard_drops = 8;
+	let score = 0;
+
+	function flood_fill(b) {
+		let queue = [[0,0]];
+		let bollard_count = 0;
+
+		do {
+			let [x,y] = queue.pop();
+		  let w = 0, e = b.length; 	
+			for(e = x;e<=cell_no && b[e][y] != 1;++e){e = e}	
+			for(w = x;w > 0 && b[w][y] != 1;w--){w = w}
+
+			for(let c = w; c <e; c++) {
+				if(b[c][y] == 2) bollard_count++;
+				
+				if((y - 1) >= 0 && b[c][y-1] != 1){
+					queue.push([c,y-1]);
+				}
+				
+				if((y + 1) < b.length && b[c][y+1] != 1){
+					queue.push([c,y+1]);
+				}
+				
+				b[c][y] = 1;
+			}
+
+		}while(queue.length > 0);
+
+		return bollard_count;
+	}
+
 
 	const socket = io();
 	
@@ -30,11 +61,34 @@
 		board_state = Array(66).fill(0).map(x => Array(66).fill(0));
 	});
 
-	socket.on('stop',()=> {
+	function count_bollards(b) {
+		let c = 0;
+		for(let x=0;x <b.length;++x) {
+			for(let y=0;y <b[x].length;++y) {
+				if(b[x][y] == 2) c++;
+
+			}
+		}
+		return c;
+	}
+
+
+	socket.on('stop',(reason)=> {
+		if (lines) {
+			if(reason == 1) {
+				score += 0;
+			}else {
+				let mid = count_bollards(board_state);
+				mid += (mid % 2);
+				
+				let split = flood_fill(board_state);
+				let t = Math.abs(split - (mid - split))
+				score += 8 - t;
+			}
+		}
+		lines = !lines;
 		playing = false;
 		bollard_drops = 8;
-		lines = !lines;
-
 	});
 	
 	$: grid = Math.floor(dimi / cell_no) ;
@@ -54,7 +108,7 @@
 		const x = 1+Math.floor((e.clientX - rect.left) / grid);
     const y = 1+Math.floor((e.clientY - rect.top) / grid);
 		
-		if(!lines && b_allowed(x,y) && bollard_drops >= 0){
+		if(!lines && b_allowed(x,y) && bollard_drops > 0){
 			socket.emit('place_bollard',x,y);
 			--bollard_drops;
 		}
@@ -164,7 +218,7 @@
 {#if lines}
 <p> Control Line</p>
 {:else}
-<p> Conrol Chess</p>
+<p> Control Chess</p>
 {/if}
 <p>Grid/s:  {fps} </p>
 
@@ -188,6 +242,7 @@
 </button>
 {/if}
 
+<p> Score: {score} </p>
 
 </controlarea>
 
