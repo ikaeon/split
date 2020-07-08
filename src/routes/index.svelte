@@ -30,7 +30,7 @@
 					queue.push([c,y-1]);
 				}
 				
-				if((y + 1) < b.length && b[c][y+1] != 1){
+				if((y + 1) <= cell_no && b[c][y+1] != 1){
 					queue.push([c,y+1]);
 				}
 				
@@ -76,7 +76,7 @@
 
 
 	socket.on('stop',(reason)=> {
-		if (lines) {
+		if (!lines) {
 			if(reason == 1) {
 				score += 0;
 			}else {
@@ -105,20 +105,23 @@
 	
 	});
 
+	let one_sec = true;
 	function b_allowed(x,y) {
 		
-		return board_state[x][y] == 0;
+		return board_state[x][y] == 0 && one_sec;
 
 	}
 
 	function handle_click(e) {
 		var rect = canvas.getBoundingClientRect();
 		const x = 1+Math.floor((e.clientX - rect.left) / grid);
-    const y = 1+Math.floor((e.clientY - rect.top) / grid);
+		const y = 1+Math.floor((e.clientY - rect.top) / grid);
 		
 		if(!lines && b_allowed(x,y) && bollard_drops > 0){
 			socket.emit('place_bollard',x,y);
 			--bollard_drops;
+			one_sec = false;
+			setTimeout(() => one_sec = true, 1000);
 		}
 		
 	}

@@ -53,6 +53,7 @@ function main_loop() {
 		// Edge of board
 		// game over
 
+
 	}else if(board_state[nx][ny] == 1) {
 		// game over
 		clearInterval(loop_handle);
