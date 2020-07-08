@@ -27,7 +27,7 @@ let loop_handle = 0;
 let board_state = Array(max_dim).fill(0).map(x => Array(max_dim).fill(0));
 let head_x = 1,head_y = 1,h_dx = 1,h_dy = 0;
 let board_dim = 50;
-
+let fps = 10;
 
 function update_board(u) {
 	const f = u.filter(([x,y,v]) => board_state[x][y] == 0 || board_state[x][y] == 3); 
@@ -48,7 +48,7 @@ function main_loop() {
 		head_y < 1) {
 		clearInterval(loop_handle);
 		update_board([[head_x,head_y,1]]);
-		io.emit('stop');
+		io.emit('stop',0);
 		loop_handle = 0;
 		// Edge of board
 		// game over
@@ -56,7 +56,7 @@ function main_loop() {
 	}else if(board_state[nx][ny] == 1) {
 		// game over
 		clearInterval(loop_handle);
-		io.emit('stop');
+		io.emit('stop',1);
 		loop_handle = 0;
 	}else if(board_state[nx][ny] == 2) {
 		let dir = Math.random() < 0.5 ? -1 : 1;
@@ -98,7 +98,7 @@ function change_direction(e) {
 
 io.on('connection', (socket) => {
 
-	socket.emit('whoami', who == 0);
+	socket.emit('whoami', who == 0,board_dim,fps);
 	who = (who + 1) % 2;
 
 	socket.on('place_bollard',(x,y)=> {
@@ -113,6 +113,7 @@ io.on('connection', (socket) => {
 		if(x >= 8 && x <= max_dim - 2) {
 			board_dim = x;
 		}
+		io.emit('change_direction',board_dim);
 	});
 
 	socket.on('start',() =>{
@@ -121,7 +122,7 @@ io.on('connection', (socket) => {
 		io.emit('start',board_dim);
 		board_state = Array(max_dim).fill(0).map(x => Array(max_dim).fill(0));
 		update_board([[head_x,head_y,1],[0,head_y,1]]);
-		loop_handle = setInterval(main_loop,100);
+		loop_handle = setInterval(main_loop,1000/fps);
 	});
 
 	socket.on('stop',()=> {
@@ -129,9 +130,10 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('change_loop_speed',(s) => {
+		fps = s;
 		if (loop_handle != 0) {
 			clearInterval(loop_handle);
-			loop_handle = setInterval(main_loop,1000/s);
+			loop_handle = setInterval(main_loop,1000/fps);
 		}
 	});
 

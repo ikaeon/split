@@ -45,8 +45,10 @@
 
 	const socket = io();
 	
-	socket.on('whoami', function(msg) {
+	socket.on('whoami', function(msg,x,f) {
 		lines = msg;
+		cell_no = x;
+		fps = f;
 	});
 
 	socket.on('update_board',(u) => {
@@ -96,6 +98,12 @@
 	$: scale = (cell) => grid * (cell - 1);
 	$: socket.emit('change_loop_speed',fps);
   $: socket.emit('change_dimension',cell_no);
+
+	
+	socket.on('change_dimension',(x) => {
+		cell_no = x;
+	
+	});
 
 	function b_allowed(x,y) {
 		
