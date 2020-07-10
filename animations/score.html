@@ -1,0 +1,48 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="UTF-8">
+<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, width=device-width, user-scalable=no" />
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <style>
+    #lottie{
+        width:30%;
+        height:30%;
+        display:block;
+        overflow: hidden;
+        transform: translate3d(0,0,0);
+        text-align: center;
+        opacity: 1;
+        padding-left: -20%;
+    }
+    #lottie svg{
+        width:15rem !important;
+        margin-left:-5rem;
+    }
+</style>
+</head>
+<body>
+    <script src="lottie.min.js"></script>
+
+    <script src="score.js"></script>
+<main>
+    <section>
+<div id="lottie"></div> <div>You've got <br>50 Points!</div>
+<button>play as the line</button>
+</section>
+</main>
+<script>
+     var params = {
+        container: document.getElementById('lottie'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData: scoreData
+    };
+
+    var anim;
+
+    anim = lottie.loadAnimation(params);
+
+</script>
+</body>
+</html>

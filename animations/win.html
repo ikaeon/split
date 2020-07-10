@@ -1,0 +1,62 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="UTF-8">
+<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, width=device-width, user-scalable=no" />
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <style>
+        section{
+            padding:0;
+        }
+        section *{
+            flex-basis: 100%;
+        }
+        article{
+            padding:1em;
+            padding-top:0;
+            margin-top:-0.5em;
+            text-align: center;
+        }
+        article button{margin-top:1em;}
+        #overlay{position: absolute;top:0;height:100vh;margin:auto;width: 100vw;}
+        #lottie{
+            flex-basis:60%;
+        }
+    </style>
+</head>
+<body>
+    <script src="lottie.min.js"></script>
+    <script src="confetti.js"></script>
+    <script src="win.js"></script>
+    <div id="overlay"></div>
+<main>
+    <section>
+<div id="lottie"></div><article> <div>You're a Wizard!<br><sub><br>You've got 49 points in 5 rounds, 5 points more than your opponent. </sub></div>
+<button>main menu</button></article>
+</section>
+</main>
+<script>
+     var params = {
+        container: document.getElementById('lottie'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData: winData
+    };
+    var params2 = {
+        container: document.getElementById('overlay'),
+        renderer: 'svg',
+        loop: false,
+        autoplay: true,
+        animationData: confettiData
+    };
+
+    var anim, anim2;
+
+    anim = lottie.loadAnimation(params);
+    anim2 = lottie.loadAnimation(params2);
+    anim2.addEventListener('complete', function(){
+        anim2.destroy()
+})
+</script>
+</body>
+</html>

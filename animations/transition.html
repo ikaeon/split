@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="UTF-8">
+<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, width=device-width, user-scalable=no" />
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <style>
+        #lottie{
+            background-image: url(white.svg);
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body>
+
+    <script src="lottie.min.js"></script>
+
+    <script src="home.js"></script>
+
+<div id="lottie"></div>
+
+<script>
+     var params = {
+        container: document.getElementById('lottie'),
+        renderer: 'svg',
+        loop: false,
+        autoplay: true,
+        animationData: homeData
+    };
+
+    var anim;
+
+    anim = lottie.loadAnimation(params);
+    anim.addEventListener('complete', function(){
+        anim.setDirection(-1);
+        anim.play();
+})
+</script>
+</body>
+</html>

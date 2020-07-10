@@ -1,0 +1,45 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="UTF-8">
+<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, width=device-width, user-scalable=no" />
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <style>
+        section{
+            padding:0;
+        }
+        section *{
+            flex-basis: 100%;
+        }
+        article{
+            padding:1em;
+            text-align: center;
+        }
+        article button{padding:0.5em 1em;margin-top:1em;}
+    </style>
+</head>
+<body>
+    <script src="lottie.min.js"></script>
+
+    <script src="line.js"></script>
+<main>
+    <section>
+<div id="lottie"></div><article> <div>Well Done!</div>
+<button>play as the dot</button></article>
+</section>
+</main>
+<script>
+     var params = {
+        container: document.getElementById('lottie'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData: lineData
+    };
+
+    var anim;
+
+    anim = lottie.loadAnimation(params);
+
+</script>
+</body>
+</html>

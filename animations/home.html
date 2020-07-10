@@ -1,0 +1,85 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="UTF-8">
+<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, width=device-width, user-scalable=no" />
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <style>
+        body{
+            background-image: url(white.svg);
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .slide-top {
+	-webkit-animation: slide-top 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+	        animation: slide-top 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+}
+
+ @-webkit-keyframes slide-top {
+  0% {
+    -webkit-transform: translateY(0);
+            transform: translateY(0);
+  }
+  100% {
+    -webkit-transform: translateY(-30vh);
+            transform: translateY(-30vh);
+  }
+}
+@keyframes slide-top {
+  0% {
+    -webkit-transform: translateY(0);
+            transform: translateY(0);
+  }
+  100% {
+    -webkit-transform: translateY(-30vh);
+            transform: translateY(-30vh);
+  }
+}
+button{
+    min-width:10em;
+}
+#wrapper {
+    opacity: 0;
+}
+#wrapper.show{
+    opacity: 1;
+    transition: all 1s;
+}
+    </style>
+</head>
+<body>
+
+    <script src="lottie.min.js"></script>
+
+    <script src="home.js"></script>
+
+<div id="lottie"></div>
+<div id="wrapper">
+    <div class="row">
+        <div class="row"><button>Create New Game</button></div>
+        <div class="row"><button>Join Game</button></div>
+        <div class="row"><button>Settings</button></div>
+        <div class="row"><button>Credits</button></div>
+</div>
+<script>
+     var params = {
+        container: document.getElementById('lottie'),
+        renderer: 'svg',
+        loop: false,
+        autoplay: true,
+        animationData: homeData
+    };
+
+    var anim;
+
+    anim = lottie.loadAnimation(params);
+
+    anim.addEventListener('complete', function(){
+        console.log('finish')
+        document.getElementById('lottie').classList.add("slide-top");
+        document.getElementById('wrapper').classList.add("show");
+})
+</script>
+</body>
+</html>
