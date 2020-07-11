@@ -10,8 +10,10 @@
     font-size:3rem;
 }
 main{
+    background-color:#1b212c;
     display:flex;justify-content:center;align-items:center;
     height:100vh;
+    width:100vw
 }
 section{
     background-color: white;
@@ -71,6 +73,35 @@ article button{
     display:flex;justify-content:center;align-items:center;
     flex-wrap: wrap;
 }
+controlarea{
+    color:#fff;
+}
+canvas{
+    background-color: #fff;
+    height: 100vmin;
+    width: 100vmin;
+    border: 0.5em solid #1b212c;
+}
+
+#settings{
+    position: fixed;
+    top:2rem;
+    right:2rem;
+    cursor:pointer;
+    width:3rem;
+}
+
+#settings{
+    fill:#fff;
+}
+
+#settings:hover{
+    fill:#4d7dc5;
+}
+
+#settings:active{
+    fill:#0145AC
+}
 
 @media screen and (max-width: 480px) {
     button, section button {
@@ -79,4 +110,12 @@ article button{
     body{
         font-size: 2.5rem;
     }
+    #settings{
+        position: initial;
+        flex-shrink: 1;
+    }
+    canvas{
+        flex-grow: 2;
+    }
   }
+

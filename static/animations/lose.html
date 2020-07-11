@@ -2,7 +2,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, width=device-width, user-scalable=no" />
 <head>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="../style.css">
     <style>
         section{
             padding:0;
@@ -12,6 +12,8 @@
         }
         article{
             padding:1em;
+            padding-top:0;
+            margin-top:-0.5em;
             text-align: center;
         }
         article button{padding:0.5em 1em;margin-top:1em;}
@@ -20,11 +22,11 @@
 <body>
     <script src="lottie.min.js"></script>
 
-    <script src="line.js"></script>
+    <script src="lose.js"></script>
 <main>
     <section>
-<div id="lottie"></div><article> <div>Well Done!</div>
-<button>play as the dot</button></article>
+<div id="lottie"></div><article> <div>Just 5 points difference!<br><sub><br>You've got 44 points in 5 rounds. Maybe snake is a better game for you.</sub></div>
+<button>main menu</button></article>
 </section>
 </main>
 <script>
@@ -33,7 +35,7 @@
         renderer: 'svg',
         loop: true,
         autoplay: true,
-        animationData: lineData
+        animationData: loseData
     };
 
     var anim;

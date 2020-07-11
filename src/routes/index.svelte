@@ -183,54 +183,35 @@
 </script>
 
 <style>
-	main {
-		display:grid;
-		grid-template-columns: auto auto 100vmin ;
-		grid-template-areas:"c a b";
-		height:100%;
-	}
-  
-	h1 {
-		grid-area:c;
-		background-color:black;
-		color:white;
-		font-size:64px;
-		writing-mode: vertical-rl;
-		text-orientation: upright;
-		margin: 0 auto;
-	}
-
-	controlarea {
-		grid-area:a;
-		display:flex;
-		flex-direction:column;
-		justify-content: stretch;
-		align-content: center;
-		height:100%;
-		width:200px;
-					
-	}
-
-	canvas {
-		grid-area:b;		
-    border: 1px solid black;
-  }
-
+main {justify-content:space-evenly;flex-wrap: wrap;}
 </style>
-
-
 <svelte:window on:keydown={handle_keydown}/>
 
 <main>
-
+<!--
 <h1> SPLIT </h1>
+-->
+<svg version="1.1" id="settings" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;" xml:space="preserve">
+	<path class="st0" d="M31,18v-4h-3.2c-0.3-1.8-1-3.5-2-4.9L28,6.8L25.2,4L23,6.2c-1.5-1-3.2-1.7-5-2V1h-4v3.2c-1.8,0.3-3.5,1-4.9,2
+		L6.8,4L4,6.8L6.2,9c-1,1.5-1.7,3.2-2,4.9H1v4h3.2c0.3,1.8,1,3.5,2,5L4,25.2L6.8,28L9,25.7c1.5,1,3.2,1.7,4.9,2V31h4v-3.2
+		c1.8-0.3,3.5-1,5-2l2.2,2.2l2.8-2.8l-2.3-2.3c1-1.5,1.7-3.2,2-4.9H31z M16,21c-2.8,0-5-2.2-5-5s2.2-5,5-5s5,2.2,5,5S18.8,21,16,21z
+		"/>
+</svg>
+<canvas
+	bind:this={canvas}
+	width={dim}
+	height={dim}
+	on:click={handle_click}
+></canvas>
+
 
 <controlarea>
 {#if lines}
 <p> Control Line</p>
 {:else}
 <p> Control Chess</p>
-{/if}
+{/if}<!--
 <p>Grid/s:  {fps} </p>
 
 <label>
@@ -242,7 +223,7 @@
 <label>
 	<input type=range bind:value={cell_no} min=8 max=64 onkeydown="return false">
 </label>
-
+-->
 {#if playing}
 <button on:click={handle_stop}>
     Stop
@@ -252,17 +233,8 @@
     Start
 </button>
 {/if}
-
+<!--
 <p> Score: {score} </p>
-
+-->
 </controlarea>
-
-
-<canvas
-	bind:this={canvas}
-	width={dim}
-	height={dim}
-	on:click={handle_click}
-></canvas>
-
 </main>
