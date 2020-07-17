@@ -230,10 +230,10 @@ main {justify-content:space-evenly;flex-wrap: wrap;}
 -->
 {#if lines}
   <nav class="d-pad">
-    <a class="up" href="#"></a>
-    <a class="right" href="#"></a>
-    <a class="down" href="#"></a>
-    <a class="left" href="#"></a>  
+    <a class="up" href="#" on:click={() => dpad_direction(38)}></a>
+    <a class="right" href="#" on:click={() => dpad_direction(39)}></a>
+    <a class="down" href="#" on:click={() => dpad_direction(40)}></a>
+    <a class="left" href="#" on:click={() => dpad_direction(37)}></a>  
   </nav>
 {/if}
 
