@@ -13,6 +13,7 @@
 	let bollard_drops = 8;
 	let score = 0;
 	let opponent_score = 0;
+	let round = 1;
 
 	function flood_fill(b) {
 		let queue = [[0,0]];
@@ -77,9 +78,11 @@
 
 
 	socket.on('stop',(reason)=> {
+		let round_score=0;
+		let round_opponent_score=0;
 		if(reason == 1) {
 			score += 0;
-		}else {
+		} else {
 			let total = count_bollards(board_state); //total number of bollards
 			//mid += (total % 2);
 			
@@ -87,13 +90,21 @@
 			//let t = Math.abs(split - (mid - split))
 			if (!lines) {
 				//score += 8 - t;
-				score = Math.min(split,total-split)
-			}else {
+				round_score = Math.min(split,total-split);
+				score += round_score;
+			} else {
 				//opponent_score += 8 - t; //calculation of opponent score
-				opponent_score= Math.min(split,total-split)
+				round_opponent_score= Math.min(split,total-split);
+				opponent_score += round_opponent_score;
 			}
 		}
-		console.log("Your score: "+score+". Opponent's score: "+ opponent_score) // to be shown in a modal
+		console.log("For this round. your score: "+round_score+". Opponent's score: "+ round_opponent_score) // to be shown in a modal
+		if(round ==5)
+		{
+			console.log("Your total score: "+score+". Opponent's tiotal score: "+ opponent_score) // to be shown in a modal
+		} else {
+			round = round++
+		}
 		lines = !lines;
 		playing = false;
 		bollard_drops = 8;
