@@ -98,7 +98,7 @@
 				opponent_score += round_opponent_score;
 			}
 		}
-		console.log("For this round. your score: "+round_score+". Opponent's score: "+ round_opponent_score) // to be shown in a modal
+		console.log("For this round, your score: "+round_score+"; opponent's score: "+ round_opponent_score) // to be shown in a modal
 		if(round ==5)
 		{
 			console.log("Your total score: "+score+". Opponent's total score: "+ opponent_score) // to be shown in a modal
