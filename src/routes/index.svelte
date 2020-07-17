@@ -130,6 +130,10 @@
 		socket.emit('change_direction',e.which);
 	}
 
+	function dpad_direction(d) {
+		socket.emit('change_direction',d);
+	}
+
 	function handle_start() {
 		socket.emit('start');
 	}
@@ -224,6 +228,15 @@ main {justify-content:space-evenly;flex-wrap: wrap;}
 	<input type=range bind:value={cell_no} min=8 max=64 onkeydown="return false">
 </label>
 -->
+{#if lines}
+  <nav class="d-pad">
+    <a class="up" href="#"></a>
+    <a class="right" href="#"></a>
+    <a class="down" href="#"></a>
+    <a class="left" href="#"></a>  
+  </nav>
+{/if}
+
 {#if playing}
 <button on:click={handle_stop}>
     Stop
