@@ -106,7 +106,6 @@ canvas{
     right:2rem;
     cursor:pointer;
     width:3rem;
-    margin-top:1rem;
 }
 
 #settings{
@@ -380,6 +379,7 @@ canvas{
     #settings{
         position: initial;
         flex-shrink: 1;
+        margin-top:1rem;
     }
     canvas{
         flex-grow: 2;
