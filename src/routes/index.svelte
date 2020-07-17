@@ -101,9 +101,9 @@
 		console.log("For this round. your score: "+round_score+". Opponent's score: "+ round_opponent_score) // to be shown in a modal
 		if(round ==5)
 		{
-			console.log("Your total score: "+score+". Opponent's tiotal score: "+ opponent_score) // to be shown in a modal
+			console.log("Your total score: "+score+". Opponent's total score: "+ opponent_score) // to be shown in a modal
 		} else {
-			round = round++
+			round++
 		}
 		lines = !lines;
 		playing = false;
@@ -124,8 +124,8 @@
 
 	let one_sec = true;
 	function b_allowed(x,y) {
-		
-		return board_state[x][y] == 0 && one_sec;
+
+		return board_state[x][y] == 0 //&& one_sec;
 
 	}
 
@@ -136,9 +136,9 @@
 		
 		if(!lines && b_allowed(x,y) && bollard_drops > 0){
 			socket.emit('place_bollard',x,y);
-			--bollard_drops;
-			one_sec = false;
-			setTimeout(() => one_sec = true, 1000);
+			//--bollard_drops;
+			//one_sec = false;
+			//setTimeout(() => one_sec = true, 1000);
 		}
 		
 	}
@@ -212,6 +212,8 @@ main {justify-content:space-evenly;flex-wrap: wrap;}
 <!--
 <h1> SPLIT </h1>
 -->
+
+<sub> Round: {round} </sub>
 <svg version="1.1" id="settings" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;" xml:space="preserve">
 	<path class="st0" d="M31,18v-4h-3.2c-0.3-1.8-1-3.5-2-4.9L28,6.8L25.2,4L23,6.2c-1.5-1-3.2-1.7-5-2V1h-4v3.2c-1.8,0.3-3.5,1-4.9,2
