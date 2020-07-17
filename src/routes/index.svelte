@@ -80,15 +80,17 @@
 		if(reason == 1) {
 			score += 0;
 		}else {
-			let mid = count_bollards(board_state); //total number of bollards
-			mid += (mid % 2);
+			let total = count_bollards(board_state); //total number of bollards
+			//mid += (total % 2);
 			
 			let split = flood_fill(board_state); //number of bollards on the coloured side
-			let t = Math.abs(split - (mid - split))
+			//let t = Math.abs(split - (mid - split))
 			if (!lines) {
-				score += 8 - t;
+				//score += 8 - t;
+				score = Math.min(split,total-split)
 			}else {
-				opponent_score += 8 - t; //calculation of opponent score
+				//opponent_score += 8 - t; //calculation of opponent score
+				opponent_score= Math.min(split,total-split)
 			}
 		}
 		console.log("Your score: "+score+". Opponent's score: "+ opponent_score) // to be shown in a modal
