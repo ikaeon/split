@@ -1,9 +1,13 @@
+'use strict'
+
 import sirv from 'sirv';
 import polka from 'polka';
 import compression from 'compression';
 import * as sapper from '@sapper/server';
 import http from 'http';
 import sock from 'socket.io';
+import {board_dim,fps,co_line,co_chess,co_nochess} from './game_constants.js'
+
 
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
@@ -21,128 +25,149 @@ polka({server}) // You can also use Express
 
 const io = sock(server);
 
-const max_dim = 64 + 2;
-let who = 0;
-let loop_handle = 0;
-let board_state = Array(max_dim).fill(0).map(x => Array(max_dim).fill(0));
-let head_x = 1,head_y = 1,h_dx = 1,h_dy = 0;
-let board_dim = 50;
-let fps = 10;
+function update_board(board,room,u) {
+	const f = u.filter(([x,y]) => board[x][y] == 0 || board[x][y] == co_nochess); 
 
-function update_board(u) {
-	const f = u.filter(([x,y,v]) => board_state[x][y] == 0 || board_state[x][y] == 3); 
-
-	f.forEach(([x,y,v]) => {board_state[x][y] = v;});
-	io.emit('update_board',f);
+	f.forEach(([x,y,v]) => {board[x][y] = v;});
+	
+	io.to(room).emit('update_board',f);
 }
 
-function main_loop() {
+function main_loop(game,room) {
 		
-
-	const nx = head_x + h_dx;
-	const ny = head_y + h_dy;
+	const [x,y] = game.head.position;
+	const [dx,dy] = game.head.velocity;
+	const loop_handle = game.loop_handle;
+	let board = game.board;
+	const nx = x + dx;
+	const ny = y + dy;
 	
-	if(head_x > board_dim || 
-		head_y > board_dim ||
-		head_x < 1 || 
-		head_y < 1) {
+	if(x > board_dim || y > board_dim || x < 1 || y < 1) {
 		clearInterval(loop_handle);
-		update_board([[head_x,head_y,1]]);
-		io.emit('stop',0);
-		loop_handle = 0;
+		update_board(game.board,room,[[x,y,co_line]]);
+		io.to(room).emit('stop',0);
 		// Edge of board
 		// game over
 
-
-	}else if(board_state[nx][ny] == 1) {
-		// game over
+	}else if(board[nx][ny] == co_line) {
+		// game over line intersection
 		clearInterval(loop_handle);
-		io.emit('stop',1);
-		loop_handle = 0;
-	}else if(board_state[nx][ny] == 2) {
-		let dir = Math.random() < 0.5 ? -1 : 1;
-		let tx = h_dx*dir;
-		let ty = h_dy*dir;
+		io.to(room).emit('stop',co_line);
+	}else if(board[nx][ny] == co_chess) {
+		// Will hit chess
+		const dir = Math.random() < 0.5 ? -1 : 1;
+		const ndx = dy*dir;
+		const ndy = dx*dir;
 		
-		h_dx = ty;
-		h_dy = tx;
-		
-		head_x += h_dx;
-		head_y += h_dy;
-		update_board([[head_x,head_y,1]]);
+		game.head.position = [x+ndx,y+ndy];
+		game.head.velocity = [ndx,ndy];
+		update_board(board,room,[[x+ndx,y+ndy,co_line]]);
 	}else {
-		head_x = nx;
-		head_y = ny;
-		update_board([[nx,ny,1]]);
+		game.head.position = [nx,ny];
+		update_board(board,room,[[nx,ny,co_line]]);
 	}
 }
 
 
-function change_direction(e) {
+
+function change_direction(game,e) {
+	
+	const [x,y] = game.head.position;
+	const [dx,dy] = game.head.velocity;
+	const board = game.board;
+
+
 	// left arrow key
-	if (e === 37 && h_dx === 0) {
-		if(board_state[head_x-1][head_y] != 2) {h_dx=-1;h_dy=0;}
-	}
+	if (e === 37 && dx === 0) {
+		if(board[x-1][y] != 2) game.head.velocity = [-1,0];
+	}	
 	// up arrow key
-	else if (e === 38 && h_dy === 0) {
-		if(board_state[head_x][head_y+1] != 2) {h_dx=0,h_dy=-1};
+	else if (e === 38 && dy === 0) {
+		if(board[x][y+1] != 2) game.head.velocity = [0,-1];
 	}
 	// right arrow key
-	else if (e === 39 && h_dx === 0) {
-		if(board_state[head_x+1][head_y] != 2) {h_dx=1,h_dy=0}
+	else if (e === 39 && dx === 0) {
+		if(board[x+1][y] != 2) game.head.velocity = [1,0]
 	}
 	// down arrow key
-	else if (e === 40 && h_dy === 0) {
-		if(board_state[head_x][head_y+1] != 2) {h_dx=0;h_dy=1};
+	else if (e === 40 && dy === 0) {
+		if(board[x][y+1] != 2) game.head.velocity = [0,1];
 	}
 }
 
+const rooms = {};
+const rcount = {};
+
 io.on('connection', (socket) => {
-
-	socket.emit('whoami', who == 0,board_dim,fps);
-	who = (who + 1) % 2;
-
-	socket.on('place_bollard',(x,y)=> {
-	  if(x>=0 && x<=board_dim && y >= 0 && y <=board_dim && board_state[x][y] == 0) {
-			update_board([[x,y,2],[x+1,y+1,3],[x-1,y+1,3],[x+1,y-1,3],[x-1,y-1,3]]);
-		}
-	});
-
-	socket.on('change_direction',change_direction);
 	
-	socket.on('change_dimension',(x) => {
-		if(x >= 8 && x <= max_dim - 2) {
-			board_dim = x;
+	let game = {};
+	let room = '';
+
+
+	socket.emit('current_games',Object.keys(rooms).filter((a)=> rcount[a] === 1));
+
+	socket.on('select_game', (g_room,playername) => {
+		
+		if(g_room === undefined) {
+			socket.disconnect(true);
+			return;
 		}
-		io.emit('change_direction',board_dim);
-	});
 
-	socket.on('start',() =>{
-		loop_handle = 0;
-		head_x = 1;head_y = Math.floor(board_dim/2);h_dx = 1;h_dy = 0;
-		io.emit('start',board_dim);
-		board_state = Array(max_dim).fill(0).map(x => Array(max_dim).fill(0));
-		update_board([[head_x,head_y,1],[0,head_y,1]]);
-		loop_handle = setInterval(main_loop,1000/fps);
-	});
+		if (playername === 'new_game') {
+			playername = 'Nope'
+		}
 
-	socket.on('stop',()=> {
-		clearInterval(loop_handle);
-	});
+		if (g_room === 'new_game') {
+			if (playername in rooms) playername +=  'B';
+			
+			room = playername;
+			socket.join(room);
+			rooms[room] = game;
+			rcount[room] = 1;
+			
+		}else if (g_room in rooms){
+			room = g_room;
+			game = rooms[room];
+			rcount[room] = 2;
+			socket.join(room);
+			socket.to(room).emit('opponent',playername);
 
-	socket.on('change_loop_speed',(s) => {
-		fps = s;
-		if (loop_handle != 0) {
-			clearInterval(loop_handle);
-			loop_handle = setInterval(main_loop,1000/fps);
+		}else {
+			socket.disconnect(true);
 		}
 	});
+
+	socket.on('place_chess',(x,y)=> {
+		if(x>=0 && x<=board_dim && y >= 0 && y <=board_dim && game.board[x][y] == 0) {
+			update_board(game.board,room,[[x,y,co_chess],[x+1,y+1,co_nochess],[x-1,y+1,co_nochess],[x+1,y-1,co_nochess],[x-1,y-1,co_nochess]]);
+		}
+	});
+
+	socket.on('change_direction',(e)=>change_direction(game,e));
+
+	socket.on('start',() => {
+		
+		game.head = {position : [1, Math.floor((board_dim+2)/2)] , velocity : [1,0]};
+		game.board = Array(board_dim+2).fill(0).map(() => new Uint8Array(board_dim + 2));
+		game.loop_handle = 0;
+	
+
+		const [x,y] = game.head.position;
+		update_board(game.board,room,[[x,y,1],[0,y,1]]);
+		
+		io.to(room).emit('start');
+
+		game.loop_handle = setInterval(main_loop.bind(null,game,room),fps);
+	});
+
 
 	socket.on('disconnect', function() {
-		clearInterval(loop_handle);
+		io.to(room).emit('quit');
+		if(--rcount[room] === 0) {
+			delete rcount[room];
+			delete rooms[room];
+		}
   });
 
-
 });
-
 
