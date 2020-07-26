@@ -3,7 +3,7 @@
   import io from "socket.io-client";
 	import {board_dim,fps,co_line,co_chess,co_nochess,max_rounds,chess_drops} from '../game_constants.js'
 	import Dpad from '../components/Dpad.svelte'
-
+	
 	let canvas;
 	let board_state = Array(board_dim+2).fill(0).map(()=>new Uint8Array(board_dim+2));
 	let control_line = false;
@@ -11,12 +11,8 @@
 	let score = 0;
 	let opponent_score = 0;
 	let round = 1;
-
-
-
-
-	let dim; // dimensions of canvas; cell_size * board_dim
-	let cell_size; // size in pixels of grid square
+	let dim = 1;
+	$:cell_size = dim / board_dim; // size in pixels of grid square
 
 	function flood_fill(board) {
 		let queue = [[0,0]];
@@ -52,11 +48,13 @@
 	socket.on('update_board',(u) => {
 		// A bit hacky
 		if(!playing) board_state = Array(board_dim+2).fill(0).map(()=>new Uint8Array(board_dim+2));
+		
 		u.forEach(([x,y,v]) => board_state[x][y] = v);
 	});
 
 
 	socket.on('start',() => {
+		canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 		playing = true;
 	});
 	
@@ -115,9 +113,8 @@
 
 	function handle_click(e) {
 		const rect = canvas.getBoundingClientRect();
-		const x = 1+Math.floor((e.clientX - rect.left) / cell_size);
-		const y = 1+Math.floor((e.clientY - rect.top) / cell_size);
-		
+		const x = 1+ Math.floor((e.clientX - rect.left - canvas.clientLeft) / cell_size);
+		const y = 1+Math.floor((e.clientY - rect.top - canvas.clientTop) / cell_size);
 		if(!control_line && chess_drop_allowed(x,y) && chess_drops > 0){
 			socket.emit('place_chess',x,y);
 
@@ -129,25 +126,17 @@
 	let dpad_direction = 0;
 
 	$:if(dpad_direction !== 0) {
-		socket.emit('change_direction',dpad_direction);
+		playing && socket.emit('change_direction',dpad_direction);
 	}
 
 	function handle_start() {
-		if(opponent !== 'Waiting...') socket.emit('start');
-	}
-
-	function handle_stop() {
-		socket.emit('stop');
+		opponent !== 'Waiting...' && socket.emit('start');
 	}
 
 	onMount(() => {
 		
-		cell_size = Math.floor((Math.min(canvas.parentElement.clientHeight, canvas.parentElement.clientWidth) - 2) / board_dim);
-		dim = cell_size*board_dim;
-
 		var context = canvas.getContext('2d');
-
-
+	  	
 		// game loop
 		function loop() {
 			requestAnimationFrame(loop);
@@ -156,7 +145,7 @@
 				for(let y = 1; y <= board_dim; ++y) {
 					if(board_state[x][y] == 1) {
 						context.fillStyle = 'green';
-						context.fillRect((x-1)*cell_size, (y-1)*cell_size, cell_size-1, cell_size-1);  
+						context.fillRect((x-1)*cell_size, (y-1)*cell_size, cell_size-2, cell_size-2);  
 					}
 					
 					else if(board_state[x][y] == 2) {
@@ -168,8 +157,8 @@
 						context.fillStyle = 'pink';
 						context.fillRect((x-1)*cell_size, (y-1)*cell_size, cell_size-1, cell_size-1);  
 					}else {
-						context.fillStyle = 'white';
-						context.fillRect((x-1)*cell_size, (y-1)*cell_size, cell_size, cell_size);  
+						//context.fillStyle = "#00000002";
+						//			context.fillRect((x-1)*cell_size, (y-1)*cell_size, cell_size, cell_size);  
 
 					}
 
@@ -181,7 +170,8 @@
 	});
 
 	let selected;
-	let playername="Enter name here...";
+	const i_text = "Enter name here...";
+	let playername=	i_text;
 	let current_games = [];
 	let opponent = "Waiting...";
 
@@ -194,9 +184,11 @@
 		current_games = [...games];
 	});
 
-	socket.on('quit',()=> {
+	socket.on('quit',(games)=> {
+		playing = false;
+		current_games = [...games];
 		opponent = 'Waiting...';
-		selected = 'new_game'; 
+		selected = false;
 	});
 
 	$: if (selected) {
@@ -208,73 +200,118 @@
 
 <style>
 	
-	main {justify-content:space-evenly;flex-wrap: wrap;}
+	main {
+    margin: 0px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size:5vmin;
+		display:flex;
+		justify-content:space-evenly;
+		flex-wrap: wrap;
+    background-color:#1b212c;
+		background-image: url(/white.svg);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;     
+    color:white;
+    width:100%;
+	}
+
+	main >p {
+		min-width:22vmin;
+	}
+
 	input { 
+		text-align: center;
+		width:48vmin;
 		background: rgba(0, 0, 0, 0);
-		font-size:32px;
 		color:white;
 		border:0;
+		font-size:5vmin;
 	}
+
+	label >select {
+		display:block;
+	}
+	controlarea{
+		display:grid;
+		grid-auto-flow:row;
+		justify-items: center;
+		color:#fff;
+		align-content:space-around;
+	}
+	
+canvas{
+		box-sizing: content-box;
+		background-color: #00000000;
+    height: 96vmin;
+    width: 96vmin;
+    border: 2vmin solid #1b212c;
+}
+
+button {
+    font-size:2vmin;
+    color:white;
+    background-color: #82C7A5;
+    cursor: pointer;
+}
+button:hover{
+    background-color: #9BD2B7;
+}
+button:active{
+    background-color: #689F84;
+}
+
 
 </style>
 
-<main>
-<sub> Round: {round} </sub>
-<svg version="1.1" id="settings" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-        viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;" xml:space="preserve">
-       <path class="st0" d="M31,18v-4h-3.2c-0.3-1.8-1-3.5-2-4.9L28,6.8L25.2,4L23,6.2c-1.5-1-3.2-1.7-5-2V1h-4v3.2c-1.8,0.3-3.5,1-4.9,2
-               L6.8,4L4,6.8L6.2,9c-1,1.5-1.7,3.2-2,4.9H1v4h3.2c0.3,1.8,1,3.5,2,5L4,25.2L6.8,28L9,25.7c1.5,1,3.2,1.7,4.9,2V31h4v-3.2
-               c1.8-0.3,3.5-1,5-2l2.2,2.2l2.8-2.8l-2.3-2.3c1-1.5,1.7-3.2,2-4.9H31z M16,21c-2.8,0-5-2.2-5-5s2.2-5,5-5s5,2.2,5,5S18.8,21,16,21z
-               "/>
-</svg>
+<main >
+<p> Round: {round} </p>
 
 
 <canvas
 	bind:this={canvas}
 	width={dim}
 	height={dim}
-	on:click={handle_click}
+	on:click={e => handle_click(e)}
+	bind:clientWidth={dim}
 ></canvas>
+
 <controlarea>
-	<input bind:value={playername} readonly={selected}>
+	<input maxlength="10" bind:value={playername} readonly={selected} on:click={(e)=> e.target.value = ''}>
+	
+{#if playername !== i_text}
 
-	{#if !selected }
-	 <p>Select Game</p>
+	{#if opponent !== 'Waiting...'}
+		{#if control_line}
+			<Dpad bind:direction={dpad_direction} />
+			<p> Control Line</p>
+		{:else}
+			<p> Control Chess</p>
+		{/if}
+	
+		<button on:click={handle_start}>
+		  Start
+		</button>
+	{/if}
+	
+	{#if !selected }		
+		<label for="room">Select Game
 
-	<select bind:value={selected}>
-		<option disabled selected value>Select Game</option>
-		<option value="new_game">New Game</option>
-		{#each current_games as game }
-			<option value={game}>{game}</option>
-		{/each}
-	</select>
+		<select name="room" bind:value={selected}>
+			<option disabled selected value>Select Game</option>
+			<option value="new_game">New Game</option>
+			
+			{#each current_games as game }
+				<option value={game}>{game}</option>
+			{/each}
+		</select>
+		</label>	
 	{:else if selected === 'new_game'}
 		<p>Opponent: {opponent} </p>
 	{:else}
-	<p>Opponent: {selected} </p>
+		<p>Opponent: {selected} </p>
+	{/if}
 
 {/if}
-
-
-	{#if control_line}
-<p> Control Line</p>
-{:else}
-<p> Control Chess</p>
-{/if}
-
-{#if control_line}
-<Dpad bind:direction={dpad_direction} />
-{/if}
-{#if opponent !== 'Waiting...'}
-{#if playing }
-<button on:click={handle_stop}>
-    Stop
-</button>
-{:else}
-<button on:click={handle_start}>
-    Start
-</button>
-{/if}
-{/if}
-	</controlarea>
-	</main>
+</controlarea>
+</main>

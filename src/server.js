@@ -1,5 +1,3 @@
-'use strict'
-
 import sirv from 'sirv';
 import polka from 'polka';
 import compression from 'compression';
@@ -44,6 +42,8 @@ function main_loop(game,room) {
 	
 	if(x > board_dim || y > board_dim || x < 1 || y < 1) {
 		clearInterval(loop_handle);
+		delete game.loop_handle;
+		
 		update_board(game.board,room,[[x,y,co_line]]);
 		io.to(room).emit('stop',0);
 		// Edge of board
@@ -52,6 +52,8 @@ function main_loop(game,room) {
 	}else if(board[nx][ny] == co_line) {
 		// game over line intersection
 		clearInterval(loop_handle);
+		delete game.loop_handle;
+
 		io.to(room).emit('stop',co_line);
 	}else if(board[nx][ny] == co_chess) {
 		// Will hit chess
@@ -96,7 +98,6 @@ function change_direction(game,e) {
 }
 
 const rooms = {};
-const rcount = {};
 
 io.on('connection', (socket) => {
 	
@@ -104,7 +105,7 @@ io.on('connection', (socket) => {
 	let room = '';
 
 
-	socket.emit('current_games',Object.keys(rooms).filter((a)=> rcount[a] === 1));
+	socket.emit('current_games',Object.keys(rooms));
 
 	socket.on('select_game', (g_room,playername) => {
 		
@@ -123,12 +124,12 @@ io.on('connection', (socket) => {
 			room = playername;
 			socket.join(room);
 			rooms[room] = game;
-			rcount[room] = 1;
 			
 		}else if (g_room in rooms){
 			room = g_room;
 			game = rooms[room];
-			rcount[room] = 2;
+			delete rooms[room];
+			
 			socket.join(room);
 			socket.to(room).emit('opponent',playername);
 
@@ -138,15 +139,18 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('place_chess',(x,y)=> {
-		if(x>=0 && x<=board_dim && y >= 0 && y <=board_dim && game.board[x][y] == 0) {
+
+		if(game.loop_handle && x>=0 && x<=board_dim && y >= 0 && y <=board_dim && game.board[x][y] == 0) {
 			update_board(game.board,room,[[x,y,co_chess],[x+1,y+1,co_nochess],[x-1,y+1,co_nochess],[x+1,y-1,co_nochess],[x-1,y-1,co_nochess]]);
 		}
 	});
 
-	socket.on('change_direction',(e)=>change_direction(game,e));
+	socket.on('change_direction',(e)=> !game.loop_handle || change_direction(game,e));
 
 	socket.on('start',() => {
 		
+		if(game.loop_handle) return; // No starts while playing
+
 		game.head = {position : [1, Math.floor((board_dim+2)/2)] , velocity : [1,0]};
 		game.board = Array(board_dim+2).fill(0).map(() => new Uint8Array(board_dim + 2));
 		game.loop_handle = 0;
@@ -162,11 +166,9 @@ io.on('connection', (socket) => {
 
 
 	socket.on('disconnect', function() {
-		io.to(room).emit('quit');
-		if(--rcount[room] === 0) {
-			delete rcount[room];
-			delete rooms[room];
-		}
+		clearInterval(game.loop_handle);
+		io.to(room).emit('quit',Object.keys(rooms));
+		
   });
 
 });
