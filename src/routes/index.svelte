@@ -115,7 +115,7 @@
 		const rect = canvas.getBoundingClientRect();
 		const x = 1+ Math.floor((e.clientX - rect.left - canvas.clientLeft) / cell_size);
 		const y = 1+Math.floor((e.clientY - rect.top - canvas.clientTop) / cell_size);
-		if(!control_line && chess_drop_allowed(x,y) && chess_drops > 0){
+		if(playing && !control_line && chess_drop_allowed(x,y) && chess_drops > 0){
 			socket.emit('place_chess',x,y);
 
 			[[x,y,co_chess],[x+1,y+1,co_nochess],[x-1,y+1,co_nochess],[x+1,y-1,co_nochess],[x-1,y-1,co_nochess]].forEach(([x,y,v]) => board_state[x][y] = v);
@@ -136,8 +136,7 @@
 	onMount(() => {
 		
 		var context = canvas.getContext('2d');
-	  	
-		// game loop
+	  		// game loop
 		function loop() {
 			requestAnimationFrame(loop);
 
@@ -265,7 +264,8 @@ button:active{
 </style>
 
 <main >
-<p> Round: {round} </p>
+	<p on:click = "{()=> document.querySelector('main').requestFullscreen()
+}"> Round: {round} </p>
 
 
 <canvas
