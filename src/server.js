@@ -35,23 +35,26 @@ function main_loop(game,room) {
 		
 	const [x,y] = game.head.position;
 	const [dx,dy] = game.head.velocity;
+	const loop_handle = game.loop_handle;
 	let board = game.board;
 	const nx = x + dx;
 	const ny = y + dy;
 	
 	if(x > board_dim || y > board_dim || x < 1 || y < 1) {
+		clearInterval(loop_handle);
+		delete game.loop_handle;
 		
 		update_board(game.board,room,[[x,y,co_line]]);
-    io.to(room).emit('stop',0);
-    return true;
+		io.to(room).emit('stop',0);
 		// Edge of board
 		// game over
 
 	}else if(board[nx][ny] == co_line) {
-    // game over line intersection
-    io.to(room).emit('stop',co_line);
-		return true;
-		
+		// game over line intersection
+		clearInterval(loop_handle);
+		delete game.loop_handle;
+
+		io.to(room).emit('stop',co_line);
 	}else if(board[nx][ny] == co_chess) {
 		// Will hit chess
 		const dir = Math.random() < 0.5 ? -1 : 1;
@@ -64,9 +67,7 @@ function main_loop(game,room) {
 	}else {
 		game.head.position = [nx,ny];
 		update_board(board,room,[[nx,ny,co_line]]);
-  }
-  
-  return false;
+	}
 }
 
 
@@ -153,44 +154,20 @@ io.on('connection', (socket) => {
 		game.head = {position : [1, Math.floor((board_dim+2)/2)] , velocity : [1,0]};
 		game.board = Array(board_dim+2).fill(0).map(() => new Uint8Array(board_dim + 2));
 		game.loop_handle = 0;
-    game.loop_count = 0;
+	
 
 		const [x,y] = game.head.position;
 		update_board(game.board,room,[[x,y,1],[0,y,1]]);
 		
 		io.to(room).emit('start');
 
-
-		game.loop_handle = setInterval(function () {
-      game.loop_count += 1;
-      if(main_loop.bind(null,game,room)) {
-        clearInterval(game.loop_handle);
-        delete game.loop_handle;
-        game.loop_count = 0;
-      }
-
-      if(game.loop_count > board_dim*board_dim) {
-        clearInterval(game.loop_handle);
-        delete game.loop_handle;
-        game.loop_count = 0;
-        console.log("setInverval leak caught");
-      }
-    
-    },fps);
+		game.loop_handle = setInterval(main_loop.bind(null,game,room),fps);
 	});
 
 
 	socket.on('disconnect', function() {
-    if(game.loop_handle) {
-      clearInterval(game.loop_handle);
-      delete game.loop_handle;
-    }
-
-    if(rooms[room]) {
-      delete rooms[room];
-    }
-    
-    io.to(room).emit('quit',Object.keys(rooms));
+		clearInterval(game.loop_handle);
+		io.to(room).emit('quit',Object.keys(rooms));
 		
   });
 
