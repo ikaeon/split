@@ -160,22 +160,25 @@ io.on('connection', (socket) => {
 		
 		io.to(room).emit('start');
 
-		game.loop_handle = setInterval(function (fn) {
+
+		game.loop_handle = setInterval(function () {
       game.loop_count += 1;
-      if(fn()) {
+      if(main_loop.bind(null,game,room)) {
         clearInterval(game.loop_handle);
         delete game.loop_handle;
+        clearInterval(this);
         game.loop_count = 0;
       }
 
       if(game.loop_count > board_dim*board_dim) {
         clearInterval(game.loop_handle);
         delete game.loop_handle;
+        clearInterval(this);
         game.loop_count = 0;
         console.log("setInverval leak caught");
       }
     
-    },fps,main_loop.bind(null,game,room));
+    },fps);
 	});
 
 
