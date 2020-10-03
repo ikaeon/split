@@ -166,14 +166,12 @@ io.on('connection', (socket) => {
       if(main_loop.bind(null,game,room)) {
         clearInterval(game.loop_handle);
         delete game.loop_handle;
-        clearInterval(this);
         game.loop_count = 0;
       }
 
       if(game.loop_count > board_dim*board_dim) {
         clearInterval(game.loop_handle);
         delete game.loop_handle;
-        clearInterval(this);
         game.loop_count = 0;
         console.log("setInverval leak caught");
       }
