@@ -97,6 +97,8 @@ function change_direction(game,e) {
 }
 
 const rooms = {};
+let connection_count = 0;
+let setInterval_count = 0;
 
 io.on('connection', (socket) => {
 	
@@ -137,6 +139,8 @@ io.on('connection', (socket) => {
 		}
 	});
 
+	connection_count += 1;
+
 	socket.on('place_chess',(x,y)=> {
 
 		if(game.loop_handle && x>=0 && x<=board_dim && y >= 0 && y <=board_dim && game.board[x][y] == 0) {
@@ -159,17 +163,20 @@ io.on('connection', (socket) => {
 		update_board(game.board,room,[[x,y,1],[0,y,1]]);
 		
 		io.to(room).emit('start');
-
+		
+		setInterval_count += 1;
 		game.loop_handle = setInterval(function (fn) {
       game.loop_count += 1;
       if(fn()) {
         clearInterval(game.loop_handle);
+				setInterval_count -= 1;
         delete game.loop_handle;
         game.loop_count = 0;
       }
 
       if(game.loop_count > board_dim*board_dim) {
         clearInterval(game.loop_handle);
+				setInterval_count -= 1;
         delete game.loop_handle;
         game.loop_count = 0;
         console.log("setInverval leak caught");
@@ -182,6 +189,7 @@ io.on('connection', (socket) => {
 	socket.on('disconnect', function() {
     if(game.loop_handle) {
       clearInterval(game.loop_handle);
+			setInterval_count -= 1;
       delete game.loop_handle;
     }
 
@@ -190,7 +198,10 @@ io.on('connection', (socket) => {
     }
     
     io.to(room).emit('quit',Object.keys(rooms));
-		
+		connection_count -= 1;
+		console.log("connection_count ",connection_count);
+		console.log("setInterval_count ",setInterval_count);
+
   });
 
 });
