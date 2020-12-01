@@ -71,27 +71,23 @@
 
 
 	socket.on('stop',(reason)=> {
-		let round_score=0;
-		let round_opponent_score=0;
-		if(reason == co_line) {
-			score += 0;
-		} else {
+		
+		if(reason != co_line) {
+					
 			let total = count_chesss(board_state); //total number of chesss
-			//mid += (total % 2);
 			
 			let split = flood_fill(board_state); //number of chesss on the coloured side
-			//let t = Math.abs(split - (mid - split))
+			const round_score = Math.min(split,total-split);
+			
 			if (!control_line) {
-				//score += 8 - t;
-				round_score = Math.min(split,total-split);
 				score += round_score;
+				console.log("Your Score this Round:",round_score);
 			} else {
-				//opponent_score += 8 - t; //calculation of opponent score
-				round_opponent_score= Math.min(split,total-split);
-				opponent_score += round_opponent_score;
+				opponent_score += round_score;
+				console.log("Opponent's Score this Round:",round_score);
 			}
 		}
-		console.log("For this round, your score: "+round_score+"; opponent's score: "+ round_opponent_score) // to be shown in a modal
+		
 		if(round ==5)
 		{
 			console.log("Your total score: "+score+". Opponent's total score: "+ opponent_score) // to be shown in a modal
