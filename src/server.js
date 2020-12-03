@@ -1,5 +1,6 @@
 import sirv from 'sirv';
-import polka from 'polka';
+//import polka from 'polka';
+import express from 'express';
 import compression from 'compression';
 import * as sapper from '@sapper/server';
 import http from 'http';
@@ -9,19 +10,22 @@ import {board_dim,fps,co_line,co_chess,co_nochess} from './game_constants.js'
 
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
-const server = http.createServer();
 
-polka({server}) // You can also use Express
-	.use(
+
+const app = express(); // You can also use Express
+app.use(
 		compression({ threshold: 0 }),
 		sirv('static', { dev }),
 		sapper.middleware()
-	)
-	.listen(PORT, err => {
+	);
+
+const server = http.createServer(app);
+const io = sock(server);
+
+server.listen(PORT, err => {
 		if (err) console.log('error', err);
 	});
 
-const io = sock(server);
 
 function update_board(board,room,u) {
 	const f = u.filter(([x,y]) => board[x][y] == 0 || board[x][y] == co_nochess); 
@@ -104,7 +108,6 @@ io.on('connection', (socket) => {
 	
 	let game = {};
 	let room = '';
-
 
 	socket.emit('current_games',Object.keys(rooms));
 
