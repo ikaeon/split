@@ -1,5 +1,5 @@
 <script>
-	import {onMount } from 'svelte';
+	import {onMount, onDestroy } from 'svelte';
   import io from "socket.io-client";
 	import {board_dim,fps,co_line,co_chess,co_nochess,max_rounds,chess_drops} from '../game_constants.js'
 	import Dpad from '../components/Dpad.svelte'
@@ -43,20 +43,7 @@
 		return chess_count;
 	}
 
-	const socket = io();
-	
-	socket.on('update_board',(u) => {
-		// A bit hacky
-		if(!playing) board_state = Array(board_dim+2).fill(0).map(()=>new Uint8Array(board_dim+2));
-		
-		u.forEach(([x,y,v]) => board_state[x][y] = v);
-	});
-
-
-	socket.on('start',() => {
-		canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-		playing = true;
-	});
+	let socket;
 	
 	function count_chesss(board) {
 		let c = 0;
@@ -70,34 +57,6 @@
 	}
 
 
-	socket.on('stop',(reason)=> {
-		
-		if(reason != co_line) {
-					
-			let total = count_chesss(board_state); //total number of chesss
-			
-			let split = flood_fill(board_state); //number of chesss on the coloured side
-			const round_score = Math.min(split,total-split);
-			
-			if (!control_line) {
-				score += round_score;
-				console.log("Your Score this Round:",round_score);
-			} else {
-				opponent_score += round_score;
-				console.log("Opponent's Score this Round:",round_score);
-			}
-		}
-		
-		if(round ==5)
-		{
-			console.log("Your total score: "+score+". Opponent's total score: "+ opponent_score) // to be shown in a modal
-		} else {
-			round++
-		}
-		
-		control_line = !control_line;
-		playing = false;
-	});
 	
 
 	
@@ -130,8 +89,68 @@
 	}
 
 	onMount(() => {
+	
+	socket = io();	
+	
+	socket.on('update_board',(u) => {
+		// A bit hacky
+		if(!playing) board_state = Array(board_dim+2).fill(0).map(()=>new Uint8Array(board_dim+2));
 		
-		var context = canvas.getContext('2d');
+		u.forEach(([x,y,v]) => board_state[x][y] = v);
+	});
+
+
+	socket.on('start',() => {
+		canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+		playing = true;
+	});
+	
+	socket.on('stop',(reason)=> {
+		
+		if(reason != co_line) {
+					
+			let total = count_chesss(board_state); //total number of chesss
+			
+			let split = flood_fill(board_state); //number of chesss on the coloured side
+			const round_score = Math.min(split,total-split);
+			
+			if (!control_line) {
+				score += round_score;
+				console.log("Your Score this Round:",round_score);
+			} else {
+				opponent_score += round_score;
+				console.log("Opponent's Score this Round:",round_score);
+			}
+		}
+		
+		if(round ==5)
+		{
+			console.log("Your total score: "+score+". Opponent's total score: "+ opponent_score) // to be shown in a modal
+		} else {
+			round++
+		}
+		
+		control_line = !control_line;
+		playing = false;
+	});
+	
+	socket.on('opponent', (opp) => {
+		control_line = true;
+		opponent = opp;
+	});
+
+	socket.on('current_games',(games) => {
+		current_games = [...games];
+	});
+
+	socket.on('quit',(games)=> {
+		playing = false;
+		current_games = [...games];
+		opponent = 'Waiting...';
+		selected = false;
+	});
+	
+	var context = canvas.getContext('2d');
 	  		// game loop
 		function loop() {
 			requestAnimationFrame(loop);
@@ -164,29 +183,20 @@
 		requestAnimationFrame(loop);
 	});
 
+	onDestroy(() => {
+		socket = undefined;
+	});
+
+
+
 	let selected;
 	const i_text = "Enter name here...";
 	let playername=	i_text;
 	let current_games = [];
 	let opponent = "Waiting...";
 
-	socket.on('opponent', (opp) => {
-		control_line = true;
-		opponent = opp;
-	});
 
-	socket.on('current_games',(games) => {
-		current_games = [...games];
-	});
-
-	socket.on('quit',(games)=> {
-		playing = false;
-		current_games = [...games];
-		opponent = 'Waiting...';
-		selected = false;
-	});
-
-	$: if (selected) {
+	$: if (selected && socket) {
 		if(opponent === 'Waiting...') socket.emit('select_game',selected,playername);
 		if(selected !== 'new_game') opponent = selected;
 	}

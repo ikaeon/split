@@ -1,7 +1,7 @@
 import sirv from 'sirv';
 //import polka from 'polka';
 import express from 'express';
-import compression from 'compression';
+//import compression from 'compression';
 import * as sapper from '@sapper/server';
 import http from 'http';
 import sock from 'socket.io';
@@ -14,13 +14,13 @@ const dev = NODE_ENV === 'development';
 
 const app = express(); // You can also use Express
 app.use(
-		compression({ threshold: 0 }),
+//		compression({ threshold: 0 }),
 		sirv('static', { dev }),
 		sapper.middleware()
 	);
 
 const server = http.createServer(app);
-const io = sock(server);
+const io = sock(server,{perMessageDeflate : false, httpCompression : false});
 
 server.listen(PORT, err => {
 		if (err) console.log('error', err);
@@ -101,8 +101,6 @@ function change_direction(game,e) {
 }
 
 const rooms = {};
-let connection_count = 0;
-let setInterval_count = 0;
 
 io.on('connection', (socket) => {
 	
@@ -142,68 +140,48 @@ io.on('connection', (socket) => {
 		}
 	});
 
-	connection_count += 1;
 
 	socket.on('place_chess',(x,y)=> {
 
-		if(game.loop_handle && x>=0 && x<=board_dim && y >= 0 && y <=board_dim && game.board[x][y] == 0) {
+		if(game.playing && x>=0 && x<=board_dim && y >= 0 && y <=board_dim && game.board[x][y] == 0) {
 			update_board(game.board,room,[[x,y,co_chess],[x+1,y+1,co_nochess],[x-1,y+1,co_nochess],[x+1,y-1,co_nochess],[x-1,y-1,co_nochess]]);
 		}
 	});
 
-	socket.on('change_direction',(e)=> !game.loop_handle || change_direction(game,e));
+	socket.on('change_direction',(e)=> !game.playing || change_direction(game,e));
 
 	socket.on('start',() => {
 		
-		if(game.loop_handle) return; // No starts while playing
+		if(game.playing) return; // No starts while playing
 
 		game.head = {position : [1, Math.floor((board_dim+2)/2)] , velocity : [1,0]};
 		game.board = Array(board_dim+2).fill(0).map(() => new Uint8Array(board_dim + 2));
-		game.loop_handle = 0;
-    game.loop_count = 0;
 
 		const [x,y] = game.head.position;
 		update_board(game.board,room,[[x,y,1],[0,y,1]]);
 		
 		io.to(room).emit('start');
 		
-		setInterval_count += 1;
-		game.loop_handle = setInterval(function (fn) {
-      game.loop_count += 1;
-      if(fn()) {
-        clearInterval(game.loop_handle);
-				setInterval_count -= 1;
-        delete game.loop_handle;
-        game.loop_count = 0;
-      }
+		function interval(fn) {
+			if(!fn()) {
+				setTimeout(interval,fps,fn); 
+			}else {
+				game.playing = false;
+			}
 
-      if(game.loop_count > board_dim*board_dim) {
-        clearInterval(game.loop_handle);
-				setInterval_count -= 1;
-        delete game.loop_handle;
-        game.loop_count = 0;
-        console.log("setInverval leak caught");
-      }
-    
-    },fps,main_loop.bind(null,game,room));
+		}
+		game.playing = true;
+		setTimeout(interval,fps,main_loop.bind(null,game,room));
 	});
 
 
 	socket.on('disconnect', function() {
-    if(game.loop_handle) {
-      clearInterval(game.loop_handle);
-			setInterval_count -= 1;
-      delete game.loop_handle;
-    }
 
     if(rooms[room]) {
       delete rooms[room];
     }
     
     io.to(room).emit('quit',Object.keys(rooms));
-		connection_count -= 1;
-		console.log("connection_count ",connection_count);
-		console.log("setInterval_count ",setInterval_count);
 
   });
 
