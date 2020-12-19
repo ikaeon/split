@@ -20,7 +20,11 @@ app.use(
 	);
 
 const server = http.createServer(app);
-const io = sock(server,{perMessageDeflate : false, httpCompression : false});
+const io = sock(server,{perMessageDeflate : false, httpCompression : false, cors: {
+    origin: ["http://localhost:8100","capacitor://localhost","http://localhost"],
+	methods: ["GET", "POST"],
+	credentials: true
+  }});
 
 server.listen(PORT, err => {
 		if (err) console.log('error', err);
